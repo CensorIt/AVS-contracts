@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity =0.8.26 >=0.5.0 ^0.8.0 ^0.8.1 ^0.8.12 ^0.8.2 ^0.8.20;
+pragma solidity ^0.8.20;
 
 // lib/eigenlayer-middleware/lib/eigenlayer-contracts/src/contracts/interfaces/ISignatureUtils.sol
 
