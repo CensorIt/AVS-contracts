@@ -5358,15 +5358,15 @@ contract Censorlt is ECDSAServiceManagerBase,OperatorAllowlist {
     mapping(uint256=>ContentReport) public reports;
 
     constructor(
-        address _avsDirectory,
-        address _stakeRegistry,
-        address _rewardsCoordinator,
-        address _delegationManager
+        address __avsDirectory,
+        address __stakeRegistry,
+        address __rewardsCoordinator,
+        address __delegationManager
     )ECDSAServiceManagerBase(
-            _avsDirectory,
-            _stakeRegistry,
-            _rewardsCoordinator,
-            _delegationManager
+            __avsDirectory,
+            __stakeRegistry,
+            __rewardsCoordinator,
+            __delegationManager
     ){}
 
      function initialize(address initialOwner_, address rewardsInitiator_, address allowlistManager_)

@@ -7,9 +7,9 @@ import {ECDSAStakeRegistry} from "../lib/eigenlayer-middleware/src/unaudited/ECD
 import {ECDSAUpgradeable} from "@openzeppelin-upgrades/contracts/utils/cryptography/ECDSAUpgradeable.sol";
 import {IERC1271Upgradeable} from "@openzeppelin-upgrades/contracts/interfaces/IERC1271Upgradeable.sol";
 import {OperatorAllowlist } from "../lib/wizard-templates/src/templates/OperatorAllowlist.sol";
-
+import "../lib/eigenlayer-contracts/src/contracts/libraries/BytesLib.sol";
 contract Censorlt is ECDSAServiceManagerBase,OperatorAllowlist {
-
+    using BytesLib for bytes;
     using ECDSAUpgradeable for bytes32;
     // ECDSAStakeRegistry public stakeRegistry;
     enum VoilationType{
@@ -55,15 +55,15 @@ contract Censorlt is ECDSAServiceManagerBase,OperatorAllowlist {
     mapping(uint256=>ContentReport) public reports;
 
     constructor(
-        address _avsDirectory,
-        address _stakeRegistry,
-        address _rewardsCoordinator,
-        address _delegationManager
+        address __avsDirectory,
+        address __stakeRegistry,
+        address __rewardsCoordinator,
+        address __delegationManager
     )ECDSAServiceManagerBase(
-            _avsDirectory,
-            _stakeRegistry,
-            _rewardsCoordinator,
-            _delegationManager
+            __avsDirectory,
+            __stakeRegistry,
+            __rewardsCoordinator,
+            __delegationManager
     ){}
 
      function initialize(address initialOwner_, address rewardsInitiator_, address allowlistManager_)
@@ -112,7 +112,9 @@ contract Censorlt is ECDSAServiceManagerBase,OperatorAllowlist {
             allTaskResponses[msg.sender][numReports].length == 0,
             "Operator has already responded to the task"
         );
-
+        require(operatorHasMinimumWeight(msg.sender), "Operator does not have match the weight requirements");
+        // check that the task is valid, hasn't been responsed yet, and is being responded in time
+       
         // The message that was signed
         bytes32 messageHash = keccak256(
             abi.encodePacked(
@@ -125,11 +127,10 @@ contract Censorlt is ECDSAServiceManagerBase,OperatorAllowlist {
         bytes32 ethSignedMessageHash = messageHash.toEthSignedMessageHash();
         
         // Verify signature using the stake registry
-        bytes4 magicValue = IERC1271Upgradeable.isValidSignature.selector;
-        require(
-            magicValue == ECDSAStakeRegistry(stakeRegistry).isValidSignature(ethSignedMessageHash, signature),
-            "Invalid signature"
-        );
+        address signer = ethSignedMessageHash.recover(signature);
+
+        require(signer == msg.sender, "Message signer is not operator");
+
         ContentReport storage report = reports[_contentId];
         // updating the storage with task responses
         allTaskResponses[msg.sender][numReports] = signature;
@@ -143,6 +144,11 @@ contract Censorlt is ECDSAServiceManagerBase,OperatorAllowlist {
 
         // emitting event
         emit TaskResponded(numReports, report, msg.sender);
+    }
+    
+    function operatorHasMinimumWeight(address operator) public view returns (bool) {
+        return ECDSAStakeRegistry(stakeRegistry).getOperatorWeight(operator)
+            >= ECDSAStakeRegistry(stakeRegistry).minimumWeight();
     }
 
     function getReport(uint256 _contentId) public view returns(ContentReport memory){
