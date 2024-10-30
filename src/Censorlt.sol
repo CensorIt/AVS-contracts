@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.20;
 
 import {ECDSAServiceManagerBase} from "../lib/eigenlayer-middleware/src/unaudited/ECDSAServiceManagerBase.sol";
